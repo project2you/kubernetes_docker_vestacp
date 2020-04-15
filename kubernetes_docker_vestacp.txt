@@ -1,0 +1,327 @@
+# 1.ติดตั้ง Docker
+$ sudo apt update && sudo apt -y upgrade
+
+$ curl -fsSL https://get.docker.com -o get-docker.sh
+$ sudo sh get-docker.sh
+$ docker --version
+$ sudo usermod -aG docker <your-user>
+
+#Optional
+#2.  ติดตั้ง Docker Compose
+$ sudo curl -L https://github.com/docker/compose/releases/download/1.21.2/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
+
+$ sudo chmod +x /usr/local/bin/docker-compose
+$ docker-compose --version
+
+#3. ติดตั้ง kubeadm
+$ sudo swapoff -a
+$ sudo apt update
+$ sudo apt install -y apt-transport-https
+$ curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+
+$ sudo touch /etc/apt/sources.list.d/kubernetes.list
+$ echo "deb http://apt.kubernetes.io/ kubernetes-xenial  main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list
+
+$ sudo apt update && sudo apt install -y kubeadm
+
+#4. สร้าง คอนฟิกสร้าง Kubernetes Master Node
+$ sudo kubeadm init --pod-network-cidr=172.31.4.0/20
+
+จะได้ token มา ให้ทำการเก็บ key ไว้ 
+kubeadm join 10.128.0.10:6443 --token 5fk80j.9vffv0r17plv8nl9 \
+    --discovery-token-ca-cert-hash sha256:4cbe7316bde6a13190d65e4bbf71247c55e15c96392a55ef7eee6861693c1067 
+
+#5. สร้าง Directory สำหรับการทำงาน
+$ mkdir -p $HOME/.kube
+$ sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+$ sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+#6. ติดตั้ง Addons เพื่อจะคอนฟิกเน็ตเวิร์ก
+$ kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+
+$  kubectl get pods -n kube-system
+#ผลลัพธ์การทำงาน
+NAME                          READY   STATUS    RESTARTS   AGE
+coredns-66bff467f8-gbk7m      0/1     Pending   0          24s
+coredns-66bff467f8-w9p72      0/1     Pending   0          24s
+etcd-vm                       1/1     Running   0          39s
+kube-apiserver-vm             1/1     Running   0          39s
+kube-controller-manager-vm    1/1     Running   0          39s
+kube-flannel-ds-amd64-rcttq   1/1     Running   0          7s
+kube-proxy-b56s8              1/1     Running   0          24s
+kube-scheduler-vm             1/1     Running   0          39s
+
+#7. ดูผลการรัน Services
+$ kubectl get services
+หรือ
+$kubectl get pods -n kube-system
+NAME                                 READY   STATUS    RESTARTS   AGE
+coredns-66bff467f8-jdg49             1/1     Running   0          2m19s
+coredns-66bff467f8-rxg4k             1/1     Running   0          2m19s
+etcd-instance-3                      1/1     Running   0          2m35s
+kube-apiserver-instance-3            1/1     Running   0          2m35s
+kube-controller-manager-instance-3   1/1     Running   0          2m35s
+kube-flannel-ds-amd64-c74wr          1/1     Running   0          104s
+kube-proxy-vltzx                     1/1     Running   0          2m19s
+kube-scheduler-instance-3            1/1     Running   0          2m35s
+
+แสดงว่าทำงานได้ปกติ
+-------------------------------------------------------------------------------
+#8. เนื่องด้วยต้องการรัน Kubernetes แบบ Single Node ต้องเอา taint master ออกด้วย
+$ kubectl taint nodes --all node-role.kubernetes.io/master-
+
+#9. ทำการสร้างไฟล์ webservice.yaml เริ่ม Copy ตั่งแต่เครื่องหมาย --- 
+$ nano webservice.yaml
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vestacp
+  labels:
+    app: vestacp
+spec:
+  selector:
+    app: vestacp
+  ports:
+    - port: 80
+      targetPort: 80
+      nodePort: 80
+      protocol: TCP
+      name : web1
+    - port: 8083
+      targetPort: 8083
+      nodePort: 30234
+      protocol: TCP
+      name : web2
+  type: NodePort
+---
+apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
+kind: Deployment
+metadata:
+  name: vestacp
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: vestacp
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: vestacp
+    spec:
+      containers:
+      - image: project2you/vestacp:1
+        name: vestacp
+        ports:
+        - containerPort: 80
+          name : web1
+        volumeMounts:
+        - mountPath: /home/admin/
+          name: website
+        - mountPath: /vesta
+          name: vesta
+      volumes:
+      - name: website
+        hostPath:
+          # directory location on host
+          path: /home/ubuntu/web
+          type: Directory
+      - name: vesta
+        hostPath:
+          # directory location on host
+          path: /home/ubuntu/vesta
+          type: Directory
+---
+#10. สร้าง Folder สำหรับการ Mapping ระหว่าง node -> container -> pod
+$ sudo mkdir  /home/ubuntu/web
+$ sudo mkdir  /home/ubuntu/vesta
+$ sudo chmod +x /home/ubuntu/web
+$ sudo chmod +x /home/ubuntu/vesta
+
+#11. ดึง Images มาไว้ที่เครื่อง
+$ sudo docker pull project2you/vestacp:1 
+
+#12. ทำการติดตั้ง Service
+$ sudo nano /etc/kubernetes/manifests/kube-apiserver.yaml 
+
+#เพิ่มบรรทัดนี้เข้าไป
+- --service-node-port-range=1-60000
+
+#ตั่งค่าใน Firewall
+vestacp	ขาเข้า	ใช้กับทั้งหมด	ช่วง IP: 0.0.0.0/0	tcp:8083,30267,8083	อนุญาต	1000	default
+
+#13. ทำการติดตั้ง Service
+$ kubectl apply -f webservice.yaml
+service/vestacp created
+deployment.apps/vestacp unchanged
+
+$ kubectl get services
+NAME         TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)                    AGE
+kubernetes   ClusterIP   10.96.0.1        <none>        443/TCP                    10m
+vestacp      NodePort    10.104.164.251   <none>        80:80/TCP,8083:30234/TCP   31s
+
+# 14. ดูว่าผลการทำงานของ node 
+$ kubectl get node
+NAME         STATUS   ROLES    AGE   VERSION
+instance-3   Ready    master   13m   v1.18.1
+
+#15. ดูภาพรวมของการทำงาน Services
+$ kubectl get all
+NAME                       	     READY   STATUS    RESTARTS   AGE
+pod/vestacp-b5b88bd8c-dd64p   1/1     Running   0          5m30s
+pod/vestacp-b5b88bd8c-jf44w   1/1     Running   0          5m29s
+pod/vestacp-b5b88bd8c-l5b5f   1/1     Running   0          5m29s
+NAME                 TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)                    AGE
+service/kubernetes   ClusterIP   10.96.0.1        <none>        443/TCP                    13m
+service/vestacp      NodePort    10.104.164.251   <none>        80:80/TCP,8083:30234/TCP   3m46s
+NAME                      READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/vestacp   3/3     3            3           5m30s
+NAME                                DESIRED   CURRENT   READY   AGE
+replicaset.apps/vestacp-b5b88bd8c   3         3         3       5m30s
+
+#16. ทำการตั่งกฏ Firewall ซึ่ง kube -> docker -> vestacp ซึ่งจะใช้ port 30234 ตามที่เราตั่งค่าไว้
+kube-vestacp	ขาเข้า	ใช้กับทั้งหมด	ช่วง IP: 0.0.0.0/0	tcp:30234
+
+#17. ทดสอบโดยการเรียกการใช้งาน หากขึ้นโค๊ด HTML แบบนี้แสดงว่าระบบทำงานได้ปกติ
+root@instance-3:/home/khomson# curl localhost
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en"><head>
+    <title>5fde03c05f00.example.com &mdash; Coming Soon</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta name="description" content="This is a default index page for a new domain."/>
+    <style type="text/css">
+        body {font-size:10px; color:#777777; font-family:arial; text-align:center;}
+        h1 {font-size:64px; color:#555555; margin: 70px 0 50px 0;}
+        p {width:320px; text-align:center; margin-left:auto;margin-right:auto; margin-top: 30px }
+        div {width:320px; text-align:center; margin-left:auto;margin-right:auto;}
+        a:link {color: #34536A;}
+        a:visited {color: #34536A;}
+        a:active {color: #34536A;}
+        a:hover {color: #34536A;}
+    </style>
+</head>
+<body>
+    <h1>5fde03c05f00.example.com</h1>
+    <div>
+        <a href="http://vestacp.com/">Powered by VESTA</a>
+    </div>
+</body>
+</html>
+
+#ทดสอบโดยการเรียกผ่าน Port : 30234 หากขึ้นแบบนี้แสดงว่าใช้งานได้ปกติ
+$ curl localhost:30234
+<html>
+<head><title>302 Found</title></head>
+<body bgcolor="white">
+<center><h1>302 Found</h1></center>
+<hr><center>nginx</center>
+</body>
+</html>
+
+# ทำการแสดงว่า pod
+$ kubectl get pod 
+NAME                      READY   STATUS    RESTARTS   AGE
+vestacp-b5b88bd8c-dd64p   1/1     Running   0          54m
+vestacp-b5b88bd8c-jf44w   1/1     Running   0          54m
+vestacp-b5b88bd8c-l5b5f   1/1     Running   0          54m
+
+19. เข้าไปที่เว็บไซต์
+https://<ip>:30234
+Username :
+Password :
+
+#20. หากต้องการรลบ Services
+kubectl delete -f webservice.yaml
+
+*** จบ ***
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+เพิ่มเติมความรู้
+อ้างอิงตามนี้ https://github.com/kubernetes/dashboard
+
+#ติดตั้ง Dashboard ซึ่งจะใช้ port 8001 เอาไว้ใช้สำหรับเข้าถึงระบบ Dashboard
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.0.0-beta8/aio/deploy/recommended.yaml
+
+kubectl proxy --port=8001 --address='0.0.0.0' --accept-hosts="^*$"
+
+#รันเสร็จแล้วเข้าไปที่
+http://35.223.148.39:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/#/login
+
+#หาก Port ค้าง ให้ทำการ 
+sudo lsof -t -i:8001
+<id>
+kill -9 <id>
+
+----------------------------------------------------------------------------------------------------------------------------------
+#หากต้องการ Scale Up ขยาย Pod การทำงาน
+khomson@vm:~$ kubectl scale --replicas=6 -f webservice.yaml 
+deployment.apps/vestacp scaled
+Error from server (NotFound): the server could not find the requested resource
+
+#ทำการเช็คดูว่ามีจำนวน Pod ขยายตามหรือไม่ ด้วยคำสั่ง
+khomson@vm:~$ kubectl get pod
+NAME                      READY   STATUS    RESTARTS   AGE
+vestacp-b5b88bd8c-44fqv   1/1     Running   0          14m
+vestacp-b5b88bd8c-4stcs   1/1     Running   0          8s
+vestacp-b5b88bd8c-5nw84   1/1     Running   0          14m
+vestacp-b5b88bd8c-74f7f   1/1     Running   0          14m
+vestacp-b5b88bd8c-qtmkh   1/1     Running   0          8s
+vestacp-b5b88bd8c-xvqjs   1/1     Running   0          8s
+
+-----------------------------------------------------------------------------------------------------------------------------------------
+คำสั่งพื้นฐานที่ควรรู้
+-----------------------------------------------------------------------------------------------------------------------------------------
+Viewing, Finding Resources
+# Get commands with basic output
+kubectl get services                          # List all services in the namespace
+kubectl get pods --all-namespaces             # List all pods in all namespaces
+kubectl get pods -o wide                      # List all pods in the current namespace, with more details
+kubectl get deployment my-dep                 # List a particular deployment
+kubectl get pods                              # List all pods in the namespace
+kubectl get pod my-pod -o yaml                # Get a pod's YAML
+
+Updating Resources
+kubectl set image deployment/frontend www=image:v2               # Rolling update "www" containers of "frontend" deployment, updating the image
+kubectl rollout history deployment/frontend                      # Check the history of deployments including the revision 
+kubectl rollout undo deployment/frontend                         # Rollback to the previous deployment
+kubectl rollout undo deployment/frontend --to-revision=2         # Rollback to a specific revision
+kubectl rollout status -w deployment/frontend                    # Watch rolling update status of "frontend" deployment until completion
+kubectl rollout restart deployment/frontend                      # Rolling restart of the "frontend" deployment
+
+cat pod.json | kubectl replace -f -                              # Replace a pod based on the JSON passed into std
+
+Interacting with running Pods
+kubectl logs my-pod                                 # dump pod logs (stdout)
+kubectl logs -l name=myLabel                        # dump pod logs, with label name=myLabel (stdout)
+kubectl logs my-pod --previous                      # dump pod logs (stdout) for a previous instantiation of a container
+kubectl logs my-pod -c my-container                 # dump pod container logs (stdout, multi-container case)
+kubectl logs -l name=myLabel -c my-container        # dump pod logs, with label name=myLabel (stdout)
+kubectl logs my-pod -c my-container --previous      # dump pod container logs (stdout, multi-container case) for a previous instantiation of a container
+kubectl logs -f my-pod                              # stream pod logs (stdout)
+
+-----------------------------------------------------------------------------------------------------------------------------------
+#คำสั่ง tmux สำหรับสลับหน้าจอ Screen ของหน้าต่าง Command 
+$ apt install tmux
+
+#คำสั่งสำหรับการใช้งาน
+Ctrl+b c Create a new window (with shell)
+Ctrl+b w Choose window from a list
+Ctrl+b 0 Switch to window 0 (by number )
+Ctrl+b , Rename the current window
+Ctrl+b % Split current pane horizontally into two panes
+Ctrl+b " Split current pane vertically into two panes
+Ctrl+b o Go to the next pane
+Ctrl+b ; Toggle between the current and previous pane
+Ctrl+b x Close the current pane
+
+-----------------------------------------------------------------------------------------------------------------------------------
+มาลอง Kubernetes ด้วย Minikube กันเถอะ แบบละเอียด
+https://medium.com/@phayao/%E0%B8%A1%E0%B8%B2%E0%B8%A5%E0%B8%AD%E0%B8%87-kubernetes-%E0%B8%94%E0%B9%89%E0%B8%A7%E0%B8%A2-minikube-%E0%B8%81%E0%B8%B1%E0%B8%99%E0%B9%80%E0%B8%96%E0%B8%AD%E0%B8%B0-b8a7bd1a6b59
+
+-------------------------------------------------------------------------------------------------------------------------------------
+เอาไว้เรียน ไว้สอน
+https://kubernetes.io/docs/tutorials/kubernetes-basics/scale/scale-interactive/
+
+
+
