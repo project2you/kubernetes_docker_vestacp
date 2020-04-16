@@ -282,12 +282,32 @@ vestacp-cdc688887-zhldq
 
 
 #เมื่อแสดงผลลัพธ์ลองตรวจเช็ค process ว่ามี process ตัวไหนที่ไม่ทำงาน เพื่อทำการแก้ไขปัญหาต่อไป
+
+หรือเข้าไปที่
+https://www.thegeekdiary.com/troubleshooting-kubectl-error-the-connection-to-the-server-x-x-x-x6443-was-refused-did-you-specify-the-right-host-or-port/
+
 ----------------------------------------------------------------------------------------------------------------------------------------
+# วิธีการ Redirect HTTP:// เป็น HTTPS:// 
+โดยทำการเพิ่มค่าในไฟล์ .htaccess ได้ดังนี้
+
+<IfModule mod_rewrite.c>
+
+RewriteEngine On
+
+# ทำการ redirect ให้มี www  https://www
+RewriteCond %{HTTP_HOST} !^www.
+RewriteRule ^(.*)$ https://www.%{HTTP_HOST}/$1 [R=301,L]
+
+# ทำการ redirect http to https
+RewriteCond %{HTTPS} off
+RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+</IfModule>
 
 *** จบ ***
 ----------------------------------------------------------------------------------------------------------------------------------------
 
-เพิ่มเติมความรู้
+#เพิ่มเติมความรู้
 อ้างอิงตามนี้ https://github.com/kubernetes/dashboard
 
 #ติดตั้ง Dashboard ซึ่งจะใช้ port 8001 เอาไว้ใช้สำหรับเข้าถึงระบบ Dashboard
