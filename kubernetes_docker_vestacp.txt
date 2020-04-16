@@ -87,7 +87,11 @@ spec:
       targetPort: 80
       nodePort: 80
       protocol: TCP
-      name : web1
+      name : http
+    - port: 443
+      name: https
+      targetPort: 443
+      nodePort: 443
     - port: 8083
       targetPort: 8083
       nodePort: 30234
@@ -116,7 +120,9 @@ spec:
         name: vestacp
         ports:
         - containerPort: 80
-          name : web1
+          name : http
+        - containerPort: 443
+          hostPort: 443
         volumeMounts:
         - mountPath: /home/admin/
           name: website
@@ -235,8 +241,52 @@ Password :
 #20. หากต้องการรลบ Services
 kubectl delete -f webservice.yaml
 
+----------------------------------------------------------------------------------------------------------------------------------------
+
+*** หากเกิดปัญหา ***
+The connection to the server x.x.x.x:6443 was refused - did you specify the right host or port?
+
+(base) root@ubuntu:~# kubectl cluster-info
+# ผลลัพธ์
+To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
+The connection to the server 103.245.164.104:6443 was refused - did you specify the right host or port?
+(base) root@ubuntu:~# sudo -i
+(base) root@ubuntu:~# swapoff -a
+(base) root@ubuntu:~#
+(base) root@ubuntu:~# exit
+logout
+
+#เช็ค
+(base) root@ubuntu:~# strace -eopenat kubectl version
+openat(AT_FDCWD, "/sys/kernel/mm/transparent_hugepage/hpage_pmd_size", O_RDONLY) = 3
+openat(AT_FDCWD, "/etc/passwd", O_RDONLY|O_CLOEXEC) = 3
+Client Version: version.Info{Major:"1", Minor:"18", GitVersion:"v1.18.1", GitCommit:"7879fc12a63337efff607952a323df90cdc7a335", GitTreeState:"clean", BuildDate:"2020-04-08T17:38:50Z", GoVersion:"go1.13.9", Compiler:"gc", Platform:"linux/amd64"}
+The connection to the server 103.245.164.104:6443 was refused - did you specify the right host or port?
++++ exited with 1 +++
+
+(base) root@ubuntu:~#  kubeadm version
+kubeadm version: &version.Info{Major:"1", Minor:"18", GitVersion:"v1.18.1", GitCommit:"7879fc12a63337efff607952a323df90cdc7a335", GitTreeState:"clean", BuildDate:"2020-04-08T17:36:32Z", GoVersion:"go1.13.9", Compiler:"gc", Platform:"linux/amd64"}
+
+(base) root@ubuntu:~# kubectl get nodes
+NAME     STATUS   ROLES    AGE     VERSION
+ubuntu   Ready    master   5d13h   v1.18.1
+
+(base) root@ubuntu:~# kubectl get pod
+NAME                      READY   STATUS    RESTARTS   AGE
+vestacp-cdc688887-p6pms   1/1     Running   1          23h
+vestacp-cdc688887-tdhbx   1/1     Running   1          23h
+vestacp-cdc688887-zhldq  
+
+#ลองใช้คำสั่ง kubectl cluster-info dump สำหรับการดู log process ในการทำงาน
+(base) root@ubuntu:~# kubectl cluster-info dump
+
+
+#เมื่อแสดงผลลัพธ์ลองตรวจเช็ค process ว่ามี process ตัวไหนที่ไม่ทำงาน เพื่อทำการแก้ไขปัญหาต่อไป
+----------------------------------------------------------------------------------------------------------------------------------------
+
 *** จบ ***
----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------
+
 เพิ่มเติมความรู้
 อ้างอิงตามนี้ https://github.com/kubernetes/dashboard
 
