@@ -313,7 +313,18 @@ RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 ----------------------------------------------------------------------------------------------------------------------------------------
 
 #เพิ่มเติมความรู้
-อ้างอิงตามนี้ https://github.com/kubernetes/dashboard
+#เพิ่ม Plugin File Manger
+kubectl get pod
+kubectl exec -it <> bash
+nano /usr/local/vesta/conf/vesta.conf
+
+#Add
+FILEMANAGER_KEY='ILOVEREO' 
+
+#เพิ่ม Crontab
+[root@linux ~]# crontab -e
+0 */1 * * * /usr/bin/sed -i "/FILEMANAGER_KEY=''/d" /usr/local/vesta/conf/vesta.conf >> /usr/local/vesta/conf/vesta.conf && sudo /usr/bin/grep -q -F "FILEMANAGER_KEY='ILOVEREO'" /usr/local/vesta/conf/vesta.conf || /usr/bin/echo "FILEMANAGER_KEY='ILOVEREO'" >> /usr/local/vesta/conf/vesta.conf
+
 
 #ติดตั้ง Dashboard ซึ่งจะใช้ port 8001 เอาไว้ใช้สำหรับเข้าถึงระบบ Dashboard
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.0.0-beta8/aio/deploy/recommended.yaml
