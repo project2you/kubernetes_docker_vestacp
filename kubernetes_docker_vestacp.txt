@@ -72,6 +72,7 @@ $ kubectl taint nodes --all node-role.kubernetes.io/master-
 
 #9. ทำการสร้างไฟล์ webservice.yaml เริ่ม Copy ตั่งแต่เครื่องหมาย --- 
 $ nano webservice.yaml
+
 ---
 apiVersion: v1
 kind: Service
@@ -89,9 +90,8 @@ spec:
       protocol: TCP
       name : http
     - port: 443
+      protocol: TCP
       name: https
-      targetPort: 443
-      nodePort: 443
     - port: 8083
       targetPort: 8083
       nodePort: 30234
@@ -122,7 +122,7 @@ spec:
         - containerPort: 80
           name : http
         - containerPort: 443
-          hostPort: 443
+          name : https
         volumeMounts:
         - mountPath: /home/admin/
           name: website
@@ -140,6 +140,8 @@ spec:
           path: /home/ubuntu/vesta
           type: Directory
 ---
+
+
 #10. สร้าง Folder สำหรับการ Mapping ระหว่าง node -> container -> pod
 $ sudo mkdir  /home/ubuntu/web
 $ sudo mkdir  /home/ubuntu/vesta
@@ -190,6 +192,9 @@ replicaset.apps/vestacp-b5b88bd8c   3         3         3       5m30s
 #16. ทำการตั่งกฏ Firewall ซึ่ง kube -> docker -> vestacp ซึ่งจะใช้ port 30234 ตามที่เราตั่งค่าไว้
 kube-vestacp	ขาเข้า	ใช้กับทั้งหมด	ช่วง IP: 0.0.0.0/0	tcp:30234
 
+หรือทดสอบกาแสดงผลการทำงานรายละเอียดของ pod
+$ kubectl describe <pod_name>
+ 
 #17. ทดสอบโดยการเรียกการใช้งาน หากขึ้นโค๊ด HTML แบบนี้แสดงว่าระบบทำงานได้ปกติ
 root@instance-3:/home/khomson# curl localhost
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
