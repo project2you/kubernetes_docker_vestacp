@@ -300,19 +300,9 @@ https://www.thegeekdiary.com/troubleshooting-kubectl-error-the-connection-to-the
 # วิธีการ Redirect HTTP:// เป็น HTTPS:// 
 โดยทำการเพิ่มค่าในไฟล์ .htaccess ได้ดังนี้
 
-<IfModule mod_rewrite.c>
-
 RewriteEngine On
-
-# ทำการ redirect ให้มี www  https://www
-RewriteCond %{HTTP_HOST} !^www.
-RewriteRule ^(.*)$ https://www.%{HTTP_HOST}/$1 [R=301,L]
-
-# ทำการ redirect http to https
 RewriteCond %{HTTPS} off
-RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
-
-</IfModule>
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
 *** จบ ***
 ----------------------------------------------------------------------------------------------------------------------------------------
