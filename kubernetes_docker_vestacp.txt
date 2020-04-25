@@ -158,7 +158,7 @@ $ sudo nano /etc/kubernetes/manifests/kube-apiserver.yaml
 - --service-node-port-range=1-60000
 
 #ตั่งค่าใน Firewall
-vestacp	ขาเข้า	ใช้กับทั้งหมด	ช่วง IP: 0.0.0.0/0	tcp:8083,30267,8083	อนุญาต	1000	default
+vestacp	ขาเข้า	ใช้กับทั้งหมด	ช่วง IP: 0.0.0.0/0	tcp:8083,30234	อนุญาต	1000	default
 
 #13. ทำการติดตั้ง Service
 $ kubectl apply -f webservice.yaml
