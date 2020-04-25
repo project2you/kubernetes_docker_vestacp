@@ -143,10 +143,12 @@ spec:
 
 
 #10. สร้าง Folder สำหรับการ Mapping ระหว่าง node -> container -> pod
-$ sudo mkdir  /home/ubuntu/web
-$ sudo mkdir  /home/ubuntu/vesta
-$ sudo chmod +x /home/ubuntu/web
-$ sudo chmod +x /home/ubuntu/vesta
+sudo mkdir  /home/ubuntu/web
+sudo mkdir  /home/ubuntu/vesta
+sudo mkdir  /home/ubuntu/vesta-start
+sudo chmod +x /home/ubuntu/web
+sudo chmod +x /home/ubuntu/vesta
+sudo chmod +x /home/ubuntu/vesta-start
 
 #11. ดึง Images มาไว้ที่เครื่อง
 $ sudo docker pull project2you/vestacp:1 
