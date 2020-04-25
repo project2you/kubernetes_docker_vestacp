@@ -146,9 +146,12 @@ spec:
 sudo mkdir  /home/ubuntu/web
 sudo mkdir  /home/ubuntu/vesta
 sudo mkdir  /home/ubuntu/vesta-start
+sudo mkdir  /home/ubuntu/backup
+
 sudo chmod +x /home/ubuntu/web
 sudo chmod +x /home/ubuntu/vesta
 sudo chmod +x /home/ubuntu/vesta-start
+sudo chmod +x /home/ubuntu/backup
 
 #11. ดึง Images มาไว้ที่เครื่อง
 $ sudo docker pull project2you/vestacp:1 
@@ -314,6 +317,20 @@ RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 *** จบ ***
 ----------------------------------------------------------------------------------------------------------------------------------------
 
+#ลบ Kube
+kubeadm reset
+sudo apt-get purge kubeadm kubectl kubelet kubernetes-cni kube*   
+sudo apt-get autoremove  
+sudo rm -rf ~/.kube
+
+rm -rf  /var/lib/etcd
+
+sudo rm -rf  /home/ubuntu/web
+sudo rm -rf   /home/ubuntu/vesta
+sudo rm -rf   /home/ubuntu/vesta-start
+sudo rm -rf   /home/ubuntu/backup
+
+---------------------------------------------------------------------------------------------------------------------------------------
 #เพิ่มเติมความรู้
 #เพิ่ม Plugin File Manger
 kubectl get pod
