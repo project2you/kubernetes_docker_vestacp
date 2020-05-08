@@ -1,49 +1,48 @@
 # 1.ติดตั้ง Docker
-$ sudo apt update && sudo apt -y upgrade
+sudo apt update && sudo apt -y upgrade
 
-$ curl -fsSL https://get.docker.com -o get-docker.sh
-$ sudo sh get-docker.sh
-$ docker --version
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+docker --version
 
-$ sudo usermod -aG docker ${USER}
-$ su - ${USER}
-id
-$ exit
+sudo groupadd docker
+sudo usermod -aG docker $USER
+newgrp docker
 
 #Optional
 #2.  ติดตั้ง Docker Compose
-$ sudo curl -L https://github.com/docker/compose/releases/download/1.21.2/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
+sudo curl -L https://github.com/docker/compose/releases/download/1.21.2/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
 
-$ sudo chmod +x /usr/local/bin/docker-compose
-$ docker-compose --version
+sudo chmod +x /usr/local/bin/docker-compose
+docker-compose --version
 
 #3. ติดตั้ง kubeadm
-$ sudo swapoff -a
-$ sudo apt update
-$ sudo apt install -y apt-transport-https
-$ curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+sudo swapoff -a
+sudo apt update
+sudo apt install -y apt-transport-https
+curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
 
-$ sudo touch /etc/apt/sources.list.d/kubernetes.list
-$ echo "deb http://apt.kubernetes.io/ kubernetes-xenial  main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list
+sudo touch /etc/apt/sources.list.d/kubernetes.list
+echo "deb http://apt.kubernetes.io/ kubernetes-xenial  main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list
 
-$ sudo apt update && sudo apt install -y kubeadm
+sudo apt update && sudo apt install -y kubeadm
 
 #4. สร้าง คอนฟิกสร้าง Kubernetes Master Node
-$ sudo kubeadm init --pod-network-cidr=172.31.4.0/20
+sudo kubeadm init --pod-network-cidr=172.31.4.0/20
 
 จะได้ token มา ให้ทำการเก็บ key ไว้ 
 kubeadm join 10.128.0.10:6443 --token 5fk80j.9vffv0r17plv8nl9 \
     --discovery-token-ca-cert-hash sha256:4cbe7316bde6a13190d65e4bbf71247c55e15c96392a55ef7eee6861693c1067 
 
 #5. สร้าง Directory สำหรับการทำงาน
-$ mkdir -p $HOME/.kube
-$ sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
-$ sudo chown $(id -u):$(id -g) $HOME/.kube/config
+mkdir -p $HOME/.kube
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
 
 #6. ติดตั้ง Addons เพื่อจะคอนฟิกเน็ตเวิร์ก
-$ kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
 
-$  kubectl get pods -n kube-system
+kubectl get pods -n kube-system
 #ผลลัพธ์การทำงาน
 NAME                          READY   STATUS    RESTARTS   AGE
 coredns-66bff467f8-gbk7m      0/1     Pending   0          24s
@@ -56,9 +55,9 @@ kube-proxy-b56s8              1/1     Running   0          24s
 kube-scheduler-vm             1/1     Running   0          39s
 
 #7. ดูผลการรัน Services
-$ kubectl get services
+kubectl get services
 หรือ
-$kubectl get pods -n kube-system
+kubectl get pods -n kube-system
 NAME                                 READY   STATUS    RESTARTS   AGE
 coredns-66bff467f8-jdg49             1/1     Running   0          2m19s
 coredns-66bff467f8-rxg4k             1/1     Running   0          2m19s
@@ -72,10 +71,10 @@ kube-scheduler-instance-3            1/1     Running   0          2m35s
 แสดงว่าทำงานได้ปกติ
 -------------------------------------------------------------------------------
 #8. เนื่องด้วยต้องการรัน Kubernetes แบบ Single Node ต้องเอา taint master ออกด้วย
-$ kubectl taint nodes --all node-role.kubernetes.io/master-
+kubectl taint nodes --all node-role.kubernetes.io/master-
 
 #9. ทำการสร้างไฟล์ webservice.yaml เริ่ม Copy ตั่งแต่เครื่องหมาย --- 
-$ nano webservice.yaml
+nano webservice.yaml
 
 ---
 apiVersion: v1
