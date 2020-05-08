@@ -93,6 +93,8 @@ spec:
       protocol: TCP
       name : http
     - port: 443
+      targetPort: 443
+      nodePort: 443
       protocol: TCP
       name: https
     - port: 8083
@@ -119,7 +121,7 @@ spec:
         app: vestacp
     spec:
       containers:
-      - image: project2you/vestacp:1
+      - image: project2you/vestacp:1.1
         name: vestacp
         ports:
         - containerPort: 80
@@ -294,10 +296,13 @@ vestacp-cdc688887-zhldq
 (base) root@ubuntu:~# kubectl cluster-info dump
 
 
-#เมื่อแสดงผลลัพธ์ลองตรวจเช็ค process ว่ามี process ตัวไหนที่ไม่ทำงาน เพื่อทำการแก้ไขปัญหาต่อไป
+#เข้าสู่เว็บไซต์
+https//<IP:30234>
+User : admin
+Pass : admin
 
-หรือเข้าไปที่
-https://www.thegeekdiary.com/troubleshooting-kubectl-error-the-connection-to-the-server-x-x-x-x6443-was-refused-did-you-specify-the-right-host-or-port/
+#เข้าสู่เว็บไซต์ adminer
+https//<IP:30234/adminer.php>
 
 ----------------------------------------------------------------------------------------------------------------------------------------
 # วิธีการ Redirect HTTP:// เป็น HTTPS:// 
@@ -414,6 +419,13 @@ Ctrl+b ; Toggle between the current and previous pane
 Ctrl+b x Close the current pane
 
 -----------------------------------------------------------------------------------------------------------------------------------
+#การสร้างลิงค์ adminer
+mkdir /usr/share/adminer
+wget "http://www.adminer.org/latest.php" -O /usr/share/adminer/latest.php
+ln -s /usr/share/adminer/latest.php /vesta/local/vesta/web/adminer.php
+
+
+
 มาลอง Kubernetes ด้วย Minikube กันเถอะ แบบละเอียด
 https://medium.com/@phayao/%E0%B8%A1%E0%B8%B2%E0%B8%A5%E0%B8%AD%E0%B8%87-kubernetes-%E0%B8%94%E0%B9%89%E0%B8%A7%E0%B8%A2-minikube-%E0%B8%81%E0%B8%B1%E0%B8%99%E0%B9%80%E0%B8%96%E0%B8%AD%E0%B8%B0-b8a7bd1a6b59
 
