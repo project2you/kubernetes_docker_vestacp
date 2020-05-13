@@ -425,6 +425,11 @@ wget "http://www.adminer.org/latest.php" -O /usr/share/adminer/latest.php
 ln -s /usr/share/adminer/latest.php /vesta/local/vesta/web/adminer.php
 
 
+#Stop all constainer
+docker stop $(docker ps -a -q)
+docker rm $(docker ps -a -q)
+
+
 #Delete Vestacp
 root@ubuntu:~# rm -rf /opt/vestacp/*
 root@ubuntu:~# rm -rf /root/vestacp/*
