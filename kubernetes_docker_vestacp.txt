@@ -425,15 +425,7 @@ wget "http://www.adminer.org/latest.php" -O /usr/share/adminer/latest.php
 ln -s /usr/share/adminer/latest.php /vesta/local/vesta/web/adminer.php
 
 
-
-มาลอง Kubernetes ด้วย Minikube กันเถอะ แบบละเอียด
-https://medium.com/@phayao/%E0%B8%A1%E0%B8%B2%E0%B8%A5%E0%B8%AD%E0%B8%87-kubernetes-%E0%B8%94%E0%B9%89%E0%B8%A7%E0%B8%A2-minikube-%E0%B8%81%E0%B8%B1%E0%B8%99%E0%B9%80%E0%B8%96%E0%B8%AD%E0%B8%B0-b8a7bd1a6b59
-
-https://dev.to/peepeepopapapeepeepo/lfs258-8-15-kubernetes-volumes-and-data-17de
-
--------------------------------------------------------------------------------------------------------------------------------------
-เอาไว้เรียน ไว้สอน
-https://kubernetes.io/docs/tutorials/kubernetes-basics/scale/scale-interactive/
-
-
+#Delete Vestacp
+root@ubuntu:~# rm -rf /opt/vestacp/*
+root@ubuntu:~# rm -rf /root/vestacp/*
 
