@@ -419,6 +419,12 @@ Ctrl+b ; Toggle between the current and previous pane
 Ctrl+b x Close the current pane
 
 -----------------------------------------------------------------------------------------------------------------------------------
+#Run Container
+mkdir -p /opt/vestacp/{vesta,home,backup}
+
+docker run -d --restart=always -p 3322:22 -p 80:80 -p 443:443 -p 9088:8083 -v /opt/vestacp/vesta:/vesta -v /opt/vestacp/home:/home -v /opt/vestacp/backup:/backup project2you/vestacp:2.0
+
+
 #การสร้างลิงค์ adminer
 mkdir /usr/share/adminer
 wget "http://www.adminer.org/latest.php" -O /usr/share/adminer/latest.php
@@ -426,6 +432,9 @@ ln -s /usr/share/adminer/latest.php /vesta/local/vesta/web/adminer.php
 
 
 #Stop all constainer
+docker rm $(docker ps -q -f status=exited)
+
+
 docker stop $(docker ps -a -q)
 docker rm $(docker ps -a -q)
 
