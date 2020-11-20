@@ -296,6 +296,10 @@ vestacp-cdc688887-zhldq
 (base) root@ubuntu:~# kubectl cluster-info dump
 
 
+#21 ทำการสร้างรหัสผ่านเข้าเว็บไซต์
+sudo kubectl exec $CONTAINER_ID /usr/local/vesta/bin/v-change-user-password admin <YOURNEWPASSWORD>
+
+
 #เข้าสู่เว็บไซต์
 https//<IP:30234>
 User : admin
