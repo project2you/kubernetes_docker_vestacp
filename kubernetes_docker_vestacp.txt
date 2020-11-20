@@ -158,6 +158,9 @@ sudo chmod +x /home/ubuntu/vesta
 sudo chmod +x /home/ubuntu/vesta-start
 sudo chmod +x /home/ubuntu/backup
 
+mkdir -p /opt/vestacp/{vesta,home,backup}
+
+
 #11. ดึง Images มาไว้ที่เครื่อง
 $ sudo docker pull niiknow/vestacp:latest
 
