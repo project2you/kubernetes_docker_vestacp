@@ -121,7 +121,7 @@ spec:
         app: vestacp
     spec:
       containers:
-      - image: project2you/vestacp:2.0
+      - image: docker pull niiknow/vestacp:latest
         name: vestacp
         ports:
         - containerPort: 80
@@ -159,7 +159,7 @@ sudo chmod +x /home/ubuntu/vesta-start
 sudo chmod +x /home/ubuntu/backup
 
 #11. ดึง Images มาไว้ที่เครื่อง
-$ sudo docker pull project2you/vestacp:2.0
+$ sudo docker pull niiknow/vestacp:latest
 
 #12. ทำการติดตั้ง Service
 $ sudo nano /etc/kubernetes/manifests/kube-apiserver.yaml 
