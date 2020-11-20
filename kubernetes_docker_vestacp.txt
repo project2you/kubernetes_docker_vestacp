@@ -300,7 +300,7 @@ vestacp-cdc688887-zhldq
 
 
 #21 ทำการสร้างรหัสผ่านเข้าเว็บไซต์
-sudo kubectl exec $CONTAINER_ID /usr/local/vesta/bin/v-change-user-password admin <YOURNEWPASSWORD>
+sudo kubectl exec <POD_ID> /usr/local/vesta/bin/v-change-user-password admin admin
 
 
 #เข้าสู่เว็บไซต์
